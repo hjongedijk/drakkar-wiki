@@ -14,6 +14,9 @@ Main endpoints:
 - `/api/requests`
 - `/api/downloads/queue/page`
 - `/api/tasks`
+- `/api/webhooks/seerr`
+- `/api/compat/sonarr`
+- `/api/compat/radarr`
 
 ## GraphQL
 
@@ -39,6 +42,32 @@ Use the same token as both headers:
 
 ```bash
 curl -H 'x-api-token: YOUR_DRAKKAR_API_TOKEN' \
-  -H 'Authorization: Bearer YOUR_DRAKKAR_API_TOKEN' \
   http://HOST:8080/api/requests
 ```
+
+`Authorization: Bearer YOUR_DRAKKAR_API_TOKEN` also works, but `x-api-token` is enough.
+
+## Seerr webhook
+
+Use this endpoint in Seerr for faster approved-request intake:
+
+```txt
+/api/webhooks/seerr
+```
+
+It is intended for:
+
+- immediate request ingest
+- faster queue prioritization than waiting for periodic sync
+- lower polling pressure on large libraries
+
+Drakkar still keeps the periodic bulk request sync task, but it now runs less frequently and acts as reconciliation rather than the primary fast path.
+
+## Bazarr compatibility
+
+Drakkar exposes Arr-style compatibility endpoints for Bazarr:
+
+- `/api/compat/sonarr`
+- `/api/compat/radarr`
+
+Use the Drakkar API token as the Bazarr API key. `apikey=` query param and `X-Api-Key` are both accepted.

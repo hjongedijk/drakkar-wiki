@@ -35,6 +35,12 @@ Check:
 
 If `request-sync` is stuck in `running`, redeploy with the latest backend image.
 
+Also note:
+
+- webhook delivery is now the preferred fast path for single Seerr approvals
+- periodic bulk request sync runs every 15 minutes by default
+- large libraries should not depend on 1-minute full polling anymore
+
 ## Placeholder request titles
 
 If you see entries like `Request 4935`, request metadata sync failed for that item.

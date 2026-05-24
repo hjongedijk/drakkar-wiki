@@ -47,7 +47,8 @@ showHeader: false
       <h2 className="mb-3 text-2xl font-semibold tracking-tight">Seerr requests move fast.</h2>
       <p className="text-white/76">
         Polling still works, but webhooks can push approved requests straight into Drakkar so they get prioritized near
-        the front of the queue without interrupting an active download.
+        the front of the queue without interrupting an active download. Periodic bulk request sync is now slower by
+        default and mainly handles reconciliation for larger libraries.
       </p>
     </div>
     <div className="drakkar-card p-6">
@@ -67,6 +68,8 @@ showHeader: false
       <div className="drakkar-logo-chip">Plex</div>
       <div className="drakkar-logo-chip">Seerr</div>
       <div className="drakkar-logo-chip">NZBHydra2</div>
+      <div className="drakkar-logo-chip">Bazarr</div>
+      <div className="drakkar-logo-chip">Apprise API</div>
       <div className="drakkar-logo-chip">TMDB</div>
       <div className="drakkar-logo-chip">TVDB</div>
       <div className="drakkar-logo-chip">Valkey</div>
@@ -113,6 +116,10 @@ showHeader: false
         <li>
           <code>/api/webhooks/seerr</code>
           <div className="mt-1 text-sm text-white/62">Accepts Seerr webhook events for faster request intake and queue promotion.</div>
+        </li>
+        <li>
+          <code>/api/compat/sonarr</code> + <code>/api/compat/radarr</code>
+          <div className="mt-1 text-sm text-white/62">Bazarr-compatible Arr shims that accept the same Drakkar API token.</div>
         </li>
       </ul>
     </div>

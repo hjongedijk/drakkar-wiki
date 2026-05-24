@@ -15,7 +15,13 @@ It includes:
 - backend
 - postgres
 - valkey
+- valkey-insight
+- nzbhydra2
+- apprise-api
 - seerr
+- bazarr
+
+The companion apps are intentionally not all chained behind Drakkar health. Only true startup prerequisites use `depends_on`.
 
 ## Host mount setup
 
@@ -50,7 +56,10 @@ Enable it:
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now drakkar-mount.service
+findmnt -T /mnt/drakkar -o TARGET,PROPAGATION
 ```
+
+Expected propagation: `shared` or `rshared`.
 
 ## First boot
 
@@ -62,3 +71,24 @@ Open the frontend and complete the setup wizard:
 - connect Seerr
 - connect metadata providers
 - optionally connect Plex
+
+## Recommended request flow
+
+After setup:
+
+- configure the Seerr webhook to point at `http://YOUR_HOST:8080/api/webhooks/seerr`
+- keep periodic request sync enabled for broader reconciliation
+
+This lets single requests arrive immediately while the scheduled sync handles larger backlog cleanup and recovery every 15 minutes by default.
+
+## Companion service startup model
+
+The public compose uses `depends_on` conservatively:
+
+- `backend` waits for `postgres` and `valkey`
+- `frontend` waits for `backend`
+- `valkey-insight` waits for `valkey`
+- `bazarr` waits for `backend`
+- `nzbhydra2` only waits for `apprise-api` startup
+
+`seerr` and `apprise-api` do not need to wait on Drakkar to boot.

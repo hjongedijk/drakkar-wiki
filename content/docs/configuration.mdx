@@ -34,6 +34,22 @@ FUSE views:
 
 NZB backups are not exposed through the FUSE tree.
 
+## Public compose services
+
+The published compose now includes:
+
+- `frontend`
+- `backend`
+- `postgres`
+- `valkey`
+- `valkey-insight`
+- `nzbhydra2`
+- `apprise-api`
+- `seerr`
+- `bazarr`
+
+They share one bridge network, but Drakkar still uses `settings.json` as the source of truth for integration URLs, API keys, and behavior.
+
 ## Shared API token
 
 The Settings page exposes one shared **Drakkar API Token**.
@@ -43,11 +59,28 @@ Use it for:
 - frontend to backend requests
 - remote REST API calls
 - GraphQL requests
+- Bazarr Sonarr/Radarr-compatible requests
 
 Remote API example:
 
 ```bash
 curl -H 'x-api-token: YOUR_DRAKKAR_API_TOKEN' \
-  -H 'Authorization: Bearer YOUR_DRAKKAR_API_TOKEN' \
   http://HOST:8080/api/status
 ```
+
+Bearer auth with the same token also works, but it is not required.
+
+## Request sync cadence
+
+Drakkar now treats request intake as two separate paths:
+
+- **Seerr webhook** for immediate single approved requests
+- **Periodic request sync** for broader reconciliation, duplicate cleanup, recovery, and queue seeding
+
+Default periodic request sync interval:
+
+```txt
+15 minutes
+```
+
+That is intentionally slower than before so large libraries do not get hammered by full polling loops while the webhook already covers fast single-request delivery.

@@ -30,30 +30,6 @@ Sidebar order lives in:
 
 - `wiki/content/docs/meta.json`
 
-## GitHub Pages URL rules
-
-Exact URL `https://drakkar.github.io/` is only possible if:
-
-1. the GitHub user or org name is `drakkar`
-2. the Pages repository is `drakkar.github.io`
-
-Then the published static site root is `https://drakkar.github.io/`.
-
-If your GitHub owner is different, for example `hjongedijk`, then GitHub Pages URLs are normally:
-
-- user/org site root: `https://hjongedijk.github.io/`
-- project site: `https://hjongedijk.github.io/<repo>/`
-
-For project pages, publish with a site base path:
-
-```bash
-./publish-wiki.sh hjongedijk/drakkar-wiki /drakkar-wiki hjongedijk/drakkar
-```
-
-That gives URLs like:
-
-- `https://hjongedijk.github.io/drakkar-wiki/`
-
 ## What to do on GitHub
 
 1. Create the target GitHub repository.
@@ -62,48 +38,34 @@ That gives URLs like:
 4. Use branch `gh-pages`, folder `/ (root)`.
 5. Run the publish script from this project root.
 
-## Publish source to repo main
+## Publish
 
 From project root:
 
 ```bash
-./publish-wiki-source.sh <owner/repo> [branch]
+./publish-wiki.sh
 ```
 
-Example:
+This single script now does both:
 
-```bash
-./publish-wiki-source.sh hjongedijk/drakkar-wiki main
-```
+- pushes editable wiki source from `project/wiki` to `hjongedijk/drakkar-wiki` branch `main`
+- builds the static site
+- publishes the built site to branch `gh-pages`
+- writes the custom domain `wiki.drakkar.botcontrol.nl`
 
-This pushes the editable wiki source files from `project/wiki` into the target repository branch, typically `main`.
+Current baked-in defaults:
 
-## Publish built site to Pages
+- target repo: `hjongedijk/drakkar-wiki`
+- source branch: `main`
+- pages branch: `gh-pages`
+- custom domain: `wiki.drakkar.botcontrol.nl`
+- edit repo links: `hjongedijk/drakkar`
 
-From project root:
+You can still override them with env vars if ever needed:
 
-```bash
-./publish-wiki.sh <pages-owner>/<pages-repo> [site-base] [edit-owner/edit-repo] [edit-branch]
-```
-
-Examples:
-
-User/org pages root:
-
-```bash
-./publish-wiki.sh drakkar/drakkar.github.io "" drakkar/drakkar main
-```
-
-Project pages:
-
-```bash
-./publish-wiki.sh hjongedijk/drakkar-wiki /drakkar-wiki hjongedijk/drakkar main
-```
-
-Custom domain:
-
-```bash
-WIKI_CUSTOM_DOMAIN=wiki.drakkar.botcontrol.nl ./publish-wiki.sh hjongedijk/drakkar-wiki "" hjongedijk/drakkar main
-```
-
-With a custom domain, the wiki must be built at the domain root. Do not publish it with `/drakkar-wiki` as the site base if GitHub Pages is serving `https://wiki.drakkar.botcontrol.nl/`.
+- `WIKI_TARGET_REPO`
+- `WIKI_SOURCE_BRANCH`
+- `WIKI_PAGES_BRANCH`
+- `WIKI_EDIT_REPO`
+- `WIKI_EDIT_BRANCH`
+- `WIKI_CUSTOM_DOMAIN`
