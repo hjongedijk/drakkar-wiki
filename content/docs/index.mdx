@@ -1,30 +1,143 @@
 ---
 title: Drakkar Docs
-description: Overview of Drakkar, runtime layout, API entry points, and where to start.
+description: Usenet-first media automation with direct streaming, request sync, and a library that stays clean.
+full: true
+showHeader: false
 ---
 
-# Drakkar Docs
+<div className="not-prose space-y-8 pb-12">
+  <section className="drakkar-card overflow-hidden px-6 py-8 md:px-10 md:py-12">
+    <div className="mb-6 flex flex-wrap gap-3">
+      <span className="drakkar-badge">Usenet-first automation</span>
+      <span className="drakkar-badge">FUSE streaming</span>
+      <span className="drakkar-badge">Docker ready</span>
+    </div>
 
-Drakkar is a Usenet-first media automation stack with:
+    <div className="space-y-6">
+      <h1 className="drakkar-hero-title font-semibold">Build a media library that actually stays organized.</h1>
+      <p className="drakkar-subtitle">
+        Drakkar syncs Seerr requests, searches with NZBHydra2, streams direct and archived releases through FUSE,
+        and keeps Plex-facing library paths stable without turning your storage into a mess.
+      </p>
+      <div className="flex flex-wrap gap-3">
+        <a className="drakkar-pill-link drakkar-pill-link-primary" href="/installation/">
+          Get Started
+        </a>
+        <a className="drakkar-pill-link drakkar-pill-link-secondary" href="/configuration/">
+          Configuration
+        </a>
+        <a className="drakkar-pill-link drakkar-pill-link-secondary" href="/api/">
+          GraphQL + API
+        </a>
+      </div>
+    </div>
+  </section>
 
-- request sync from Seerr
-- NZBHydra2-backed search and feed caching
-- direct and archived streaming through FUSE
-- Plex-targeted refreshes
-- a library view that tracks requested, downloading, missing, and completed media
-- GitHub-backed documentation pages editable through normal repository files
+  <section className="drakkar-grid md:grid-cols-3">
+    <div className="drakkar-card p-6">
+      <div className="mb-3 text-sm uppercase tracking-[0.22em] text-cyan-200/70">Direct streaming</div>
+      <h2 className="mb-3 text-2xl font-semibold tracking-tight">Serve media before full extraction.</h2>
+      <p className="text-white/76">
+        Direct files and archive-backed releases can become streamable through the VFS layer, with targeted Plex refresh
+        instead of broad library churn.
+      </p>
+    </div>
+    <div className="drakkar-card p-6">
+      <div className="mb-3 text-sm uppercase tracking-[0.22em] text-cyan-200/70">Request sync</div>
+      <h2 className="mb-3 text-2xl font-semibold tracking-tight">Seerr requests move fast.</h2>
+      <p className="text-white/76">
+        Polling still works, but webhooks can push approved requests straight into Drakkar so they get prioritized near
+        the front of the queue without interrupting an active download.
+      </p>
+    </div>
+    <div className="drakkar-card p-6">
+      <div className="mb-3 text-sm uppercase tracking-[0.22em] text-cyan-200/70">Naming control</div>
+      <h2 className="mb-3 text-2xl font-semibold tracking-tight">Canonical movie and TV paths.</h2>
+      <p className="text-white/76">
+        Import, relink, and cleanup flows keep a single canonical library path per title so Plex and your storage do not
+        drift into duplicate show folders.
+      </p>
+    </div>
+  </section>
 
-## Start here
+  <section className="drakkar-card px-6 py-8 md:px-10">
+    <div className="mb-3 text-sm uppercase tracking-[0.22em] text-cyan-200/70">Built for real stacks</div>
+    <h2 className="mb-6 text-3xl font-semibold tracking-tight">Connect the services you already use.</h2>
+    <div className="drakkar-logo-grid">
+      <div className="drakkar-logo-chip">Plex</div>
+      <div className="drakkar-logo-chip">Seerr</div>
+      <div className="drakkar-logo-chip">NZBHydra2</div>
+      <div className="drakkar-logo-chip">TMDB</div>
+      <div className="drakkar-logo-chip">TVDB</div>
+      <div className="drakkar-logo-chip">Valkey</div>
+      <div className="drakkar-logo-chip">PostgreSQL</div>
+      <div className="drakkar-logo-chip">Usenet providers</div>
+    </div>
+  </section>
 
-- [Installation](./installation/)
-- [Configuration](./configuration/)
-- [API](./api/)
-- [Upgrading](./upgrading/)
-- [Troubleshooting](./troubleshooting/)
+  <section className="drakkar-grid md:grid-cols-2">
+    <div className="drakkar-card p-6">
+      <div className="mb-3 text-sm uppercase tracking-[0.22em] text-cyan-200/70">Read this first</div>
+      <ul className="space-y-4 text-white/86">
+        <li>
+          <a className="text-cyan-200 hover:text-white" href="/installation/">
+            Installation
+          </a>
+          <div className="mt-1 text-sm text-white/62">Docker compose, host mount propagation, Valkey overcommit, and first boot.</div>
+        </li>
+        <li>
+          <a className="text-cyan-200 hover:text-white" href="/configuration/">
+            Configuration
+          </a>
+          <div className="mt-1 text-sm text-white/62">`settings.json`, service credentials, storage layout, and runtime defaults.</div>
+        </li>
+        <li>
+          <a className="text-cyan-200 hover:text-white" href="/upgrading/">
+            Upgrading
+          </a>
+          <div className="mt-1 text-sm text-white/62">Safe image pulls, recreate flow, migrations, and post-upgrade checks.</div>
+        </li>
+      </ul>
+    </div>
+    <div className="drakkar-card p-6">
+      <div className="mb-3 text-sm uppercase tracking-[0.22em] text-cyan-200/70">API surface</div>
+      <ul className="space-y-4 text-white/86">
+        <li>
+          <code>/api/graphql</code>
+          <div className="mt-1 text-sm text-white/62">Primary API explorer and schema surface for programmatic access.</div>
+        </li>
+        <li>
+          <code>/api/docs</code>
+          <div className="mt-1 text-sm text-white/62">Quick API reference with auth model and curl examples.</div>
+        </li>
+        <li>
+          <code>/api/webhooks/seerr</code>
+          <div className="mt-1 text-sm text-white/62">Accepts Seerr webhook events for faster request intake and queue promotion.</div>
+        </li>
+      </ul>
+    </div>
+  </section>
 
-## Main endpoints
-
-- `/` public docs home
-- `/installation/` install guide
-- `/configuration/` runtime and settings
-- `/api/` API usage guide
+  <section className="drakkar-card px-6 py-8 md:px-10">
+    <div className="mb-3 text-sm uppercase tracking-[0.22em] text-cyan-200/70">Why Drakkar</div>
+    <h2 className="mb-4 text-3xl font-semibold tracking-tight">Designed around throughput, not just pretty metadata.</h2>
+    <div className="drakkar-grid md:grid-cols-2 xl:grid-cols-4">
+      <div>
+        <div className="mb-1 text-4xl font-semibold text-cyan-200">1</div>
+        <p className="text-white/72">Shared token model across UI and API access.</p>
+      </div>
+      <div>
+        <div className="mb-1 text-4xl font-semibold text-cyan-200">2</div>
+        <p className="text-white/72">Separate runtime config and mount-backed working paths.</p>
+      </div>
+      <div>
+        <div className="mb-1 text-4xl font-semibold text-cyan-200">3</div>
+        <p className="text-white/72">Import cleanup and naming migration tasks to keep libraries sane.</p>
+      </div>
+      <div>
+        <div className="mb-1 text-4xl font-semibold text-cyan-200">4</div>
+        <p className="text-white/72">Queue prioritization for request-driven media without stopping active work.</p>
+      </div>
+    </div>
+  </section>
+</div>

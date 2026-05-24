@@ -3,11 +3,11 @@ import "@/app/global.css";
 import { source } from "@/lib/source";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { RootProvider } from "fumadocs-ui/provider/next";
-import { Inter } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 
 import type { ReactNode } from "react";
 
-const inter = Inter({ subsets: ["latin"] });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
 
 export const metadata = {
   title: {
@@ -19,13 +19,14 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={inter.className} suppressHydrationWarning>
+    <html lang="en" className={spaceGrotesk.className} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col">
         <RootProvider>
           <DocsLayout
             tree={source.pageTree}
             nav={{ title: <span className="font-bold tracking-tight">Drakkar</span> }}
             links={[
+              { text: "Wiki", url: "/" },
               { text: "Frontend Repo", url: "https://github.com/hjongedijk/drakkar-frontend" },
               { text: "Backend Repo", url: "https://github.com/hjongedijk/drakkar-backend" }
             ]}

@@ -22,9 +22,11 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
     lastModified?: Date | string | number;
     title: string;
     description?: string;
+    showHeader?: boolean;
   };
 
   const MDX = data.body;
+  const showHeader = data.showHeader !== false;
 
   return (
     <DocsPage
@@ -36,8 +38,8 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
         path: `wiki/content/docs/${page.path}`
       } : undefined}
     >
-      <DocsTitle>{data.title}</DocsTitle>
-      <DocsDescription>{data.description}</DocsDescription>
+      {showHeader ? <DocsTitle>{data.title}</DocsTitle> : null}
+      {showHeader ? <DocsDescription>{data.description}</DocsDescription> : null}
       <DocsBody>
         <MDX components={{ ...defaultMdxComponents }} />
       </DocsBody>

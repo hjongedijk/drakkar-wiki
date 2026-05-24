@@ -5,16 +5,129 @@
 :root {
   --color-fd-primary: 57 230 207;
   --color-fd-accent: 14 27 31;
+  --color-fd-secondary: 7 16 21;
+  --color-fd-card: 9 20 25;
+  --color-fd-popover: 8 17 22;
+  --color-fd-muted: 11 25 31;
+  --color-fd-border: 22 45 52;
+  --color-fd-ring: 57 230 207;
 }
 
 html,
 body {
   min-height: 100%;
   background:
-    radial-gradient(circle at top, rgba(57, 230, 207, 0.08), transparent 28%),
-    linear-gradient(180deg, #061114 0%, #08161b 48%, #071015 100%);
+    radial-gradient(circle at top left, rgba(57, 230, 207, 0.16), transparent 26%),
+    radial-gradient(circle at top right, rgba(105, 176, 255, 0.12), transparent 24%),
+    linear-gradient(180deg, #050d12 0%, #071218 42%, #060d12 100%);
+  scroll-behavior: smooth;
 }
 
 body {
   color: #e9fcff;
+}
+
+a {
+  text-underline-offset: 0.24em;
+}
+
+.prose {
+  max-width: none;
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  letter-spacing: -0.04em;
+}
+
+.prose p,
+.prose li {
+  color: rgba(233, 252, 255, 0.82);
+}
+
+.prose code {
+  border: 1px solid rgba(57, 230, 207, 0.18);
+  background: rgba(11, 25, 31, 0.9);
+  border-radius: 0.55rem;
+  padding: 0.18rem 0.42rem;
+}
+
+.drakkar-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.drakkar-card {
+  border: 1px solid rgba(57, 230, 207, 0.14);
+  background: linear-gradient(180deg, rgba(10, 22, 28, 0.92), rgba(7, 15, 20, 0.96));
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.28);
+  border-radius: 1.5rem;
+}
+
+.drakkar-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(57, 230, 207, 0.22);
+  background: rgba(8, 20, 25, 0.92);
+  padding: 0.45rem 0.8rem;
+  font-size: 0.82rem;
+  color: rgba(233, 252, 255, 0.92);
+}
+
+.drakkar-hero-title {
+  font-size: clamp(3rem, 9vw, 5.7rem);
+  line-height: 0.92;
+  letter-spacing: -0.08em;
+  text-wrap: balance;
+}
+
+.drakkar-subtitle {
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  color: rgba(233, 252, 255, 0.76);
+  max-width: 48rem;
+  text-wrap: balance;
+}
+
+.drakkar-pill-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.1rem;
+  border-radius: 999px;
+  padding: 0.85rem 1.15rem;
+  font-weight: 600;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.drakkar-pill-link:hover {
+  transform: translateY(-1px);
+}
+
+.drakkar-pill-link-primary {
+  background: linear-gradient(135deg, rgba(57, 230, 207, 0.96), rgba(66, 191, 255, 0.9));
+  color: #021016;
+}
+
+.drakkar-pill-link-secondary {
+  border: 1px solid rgba(57, 230, 207, 0.2);
+  background: rgba(9, 21, 27, 0.92);
+  color: #e9fcff;
+}
+
+.drakkar-logo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.85rem;
+}
+
+.drakkar-logo-chip {
+  border: 1px solid rgba(57, 230, 207, 0.12);
+  background: rgba(8, 19, 24, 0.88);
+  border-radius: 1rem;
+  padding: 0.95rem 1rem;
+  text-align: center;
+  color: rgba(233, 252, 255, 0.78);
 }
