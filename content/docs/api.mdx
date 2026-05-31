@@ -1,29 +1,51 @@
 ---
 title: API
-description: REST entry points, GraphQL, and authentication examples.
+description: REST entry points, GraphQL, Scalar API docs, and authentication examples.
 ---
 
 # API
 
-## REST
+## Interactive Docs (Scalar)
 
-Main endpoints:
+Drakkar ships an interactive API reference at:
 
-- `/api/status`
-- `/api/library`
-- `/api/requests`
-- `/api/downloads/queue/page`
-- `/api/tasks`
-- `/api/webhooks/seerr`
-- `/api/compat/sonarr`
-- `/api/compat/radarr`
+```txt
+http://HOST:3000/api/docs
+```
+
+All endpoints, request/response schemas, and authentication requirements are documented there.
+
+## Authentication
+
+All API calls require the **Drakkar API Token** found in Settings.
+
+```bash
+curl -H 'x-api-token: YOUR_DRAKKAR_API_TOKEN' \
+  http://HOST:8080/api/status
+```
+
+`Authorization: Bearer YOUR_DRAKKAR_API_TOKEN` also works.
+
+## Key REST Endpoints
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/status` | System health, queue sizes, active streams |
+| `GET /api/library` | Media library items |
+| `GET /api/requests` | Request list |
+| `GET /api/downloads/queue/page` | Download queue |
+| `GET /api/tasks` | Scheduled task status and next run times |
+| `GET /api/vfs/streams/metrics` | NNTP streaming metrics and cache hit rate |
+| `POST /api/webhooks/seerr` | Seerr webhook for immediate request intake |
+| `/api/compat/sonarr` | Sonarr-compatible endpoint (for Bazarr etc.) |
+| `/api/compat/radarr` | Radarr-compatible endpoint |
 
 ## GraphQL
 
-Use GraphiQL at:
+Interactive GraphiQL at:
 
 ```txt
-/api/graphql
+http://HOST:8080/api/graphql
 ```
 
 Example query:
@@ -36,38 +58,21 @@ Example query:
 }
 ```
 
-## Authentication
+## Seerr Webhook
 
-Use the same token as both headers:
-
-```bash
-curl -H 'x-api-token: YOUR_DRAKKAR_API_TOKEN' \
-  http://HOST:8080/api/requests
-```
-
-`Authorization: Bearer YOUR_DRAKKAR_API_TOKEN` also works, but `x-api-token` is enough.
-
-## Seerr webhook
-
-Use this endpoint in Seerr for faster approved-request intake:
+Configure in Seerr to point at:
 
 ```txt
-/api/webhooks/seerr
+http://YOUR_HOST:8080/api/webhooks/seerr
 ```
 
-It is intended for:
+Enables immediate ingest of single approved requests without waiting for the periodic sync cycle.
 
-- immediate request ingest
-- faster queue prioritization than waiting for periodic sync
-- lower polling pressure on large libraries
+## Arr Compatibility (Bazarr)
 
-Drakkar still keeps the periodic bulk request sync task, but it now runs less frequently and acts as reconciliation rather than the primary fast path.
-
-## Bazarr compatibility
-
-Drakkar exposes Arr-style compatibility endpoints for Bazarr:
+Drakkar exposes Radarr/Sonarr-compatible endpoints for Bazarr:
 
 - `/api/compat/sonarr`
 - `/api/compat/radarr`
 
-Use the Drakkar API token as the Bazarr API key. `apikey=` query param and `X-Api-Key` are both accepted.
+Use the Drakkar API token as the Bazarr API key. Both `apikey=` query param and `X-Api-Key` header are accepted.

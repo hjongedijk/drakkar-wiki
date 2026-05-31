@@ -1,48 +1,91 @@
 ---
 title: Troubleshooting
-description: Common startup, FUSE, queue, and storage issues.
+description: Common startup, FUSE, playback, queue, and storage issues.
 ---
 
 # Troubleshooting
 
-## FUSE not mounted after restart
+## FUSE Not Mounted After Restart
 
 Check:
 
 ```bash
-docker compose logs --tail 200 backend
+docker compose logs --tail 100 drakkar_rclone
 findmnt -T /mnt/drakkar -o TARGET,PROPAGATION
+cat /proc/mounts | grep drakkar
 ```
 
-Expected mount propagation: `shared` or `rshared`.
+Expected propagation: `shared` or `rshared`. If missing, ensure `drakkar-mount.service` is enabled and running:
 
-## Unexpected folders under ./data
+```bash
+systemctl status drakkar-mount.service
+```
 
-Current public defaults only keep:
+## Plex Cannot See Files
 
-- `./data/config/settings.json`
-- `./data/nzb-backup`
+1. Confirm FUSE is mounted: `ls /mnt/drakkar/vfs/` should show `.ids`, `completed-symlinks`, `content`, `nzbs`
+2. Confirm symlinks resolve: `stat -L "/mnt/drakkar/media/movies/Movie/Movie.mkv"` should return a size
+3. Plex libraries must point to `/mnt/drakkar/media/movies` and `/mnt/drakkar/media/tv`
+4. The Plex container must bind `/mnt/drakkar:/mnt/drakkar:rslave,z`
 
-Working folders should be under `/mnt`, not `./data`.
+## Plex Transcoding Instead of Direct Play
 
-## Slow request processing
+The Plex client quality setting defaults to **Auto**, which adapts down based on estimated bandwidth. Change it to **Original** (or Maximum) in the Plex client to force direct play at full quality.
+
+## Video Takes Long to Start
+
+With `vfs-cache-mode=full` and `--vfs-read-chunk-size=8M`, the first 8 MB chunk takes ~0.6 s at 100 Mbps before Plex receives any bytes. Warm NNTP connections reduce this further.
+
+If start time is consistently slow:
+
+- check NNTP pool state at `/api/vfs/streams/metrics`
+- check IO pressure: `cat /proc/pressure/io`
+
+## Slow Seeking
+
+Seeking into an uncached position requires sequential download to that point. For a 4K file at 51 Mbps, seeking 30 min in needs ~11 GB downloaded first (~14 min at 100 Mbps).
+
+Once a file is fully cached (played from start), all subsequent seeks are instant from disk cache. The 1 GB `--vfs-read-ahead` keeps ~160 s buffered ahead for smooth sequential playback.
+
+## High IO Pressure
+
+IO pressure above ~20% avg10 at idle usually means rclone is writing many large files concurrently. Common cause: a full Plex library scan triggering mass simultaneous downloads.
+
+The rclone VFS cache uses container ephemeral storage (Docker overlay) by default — no explicit disk volume mount. IO spikes during a full scan are expected and temporary.
+
+## Slow Request Processing
 
 Check:
 
-- `/api/tasks`
+- `/api/tasks` — all monitoring tasks should have `nextRunAt` set
 - `/api/status`
 - `/api/downloads/queue/page?page=1&limit=100`
 
-If `request-sync` is stuck in `running`, redeploy with the latest backend image.
+If `request-download-recovery` is not scheduled, redeploy with the latest backend image.
 
-Also note:
+## Placeholder Request Titles
 
-- webhook delivery is now the preferred fast path for single Seerr approvals
-- periodic bulk request sync runs every 15 minutes by default
-- large libraries should not depend on 1-minute full polling anymore
+If you see entries like `Request 4935`, request metadata sync failed for that item. Newer builds fall back to Drakkar metadata lookups to replace placeholders automatically.
 
-## Placeholder request titles
+## Waiting for Provider
 
-If you see entries like `Request 4935`, request metadata sync failed for that item.
+Downloads enter `waiting_for_provider` when no enabled Usenet provider is configured. Add a provider through the Settings page.
 
-Newer builds fall back to Drakkar metadata lookups to replace placeholders.
+Downloads enter `fetching_nzb` while an NZB URL is being downloaded. If it fails, the download moves to `failed`. After the NZB is parsed, Drakkar verifies article availability via NNTP `STAT`; only prepared NZBs become streamable.
+
+## Broken Symlinks in Media Library
+
+Media library symlinks point into `/.ids/c/m/p/s/y/<fileId>` on the FUSE mount. If the FUSE is unavailable or an NZB was removed from the database, symlinks appear broken. Reimport affected items through the Drakkar UI or Downloads page.
+
+## Frontend Calls Localhost
+
+If the browser console shows errors to `localhost:3000`, set `apiBaseUrl` in `/data/config/settings.json` to the correct backend URL, then restart the frontend.
+
+## Permissions
+
+The backend must write to `/data/config`:
+
+```bash
+sudo chown -R "$USER:$USER" ./data
+chmod -R u+rwX ./data
+```

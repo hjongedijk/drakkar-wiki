@@ -9,29 +9,38 @@ description: Public Docker Compose deployment, host mount requirements, and firs
 
 Use the published compose stack from the backend release repo.
 
-It includes:
+Services included:
 
-- frontend
-- backend
-- postgres
-- valkey
-- valkey-insight
-- nzbhydra2
-- apprise-api
-- seerr
-- bazarr
+- `drakkar_frontend` (port 8080)
+- `drakkar_backend` (port 3000, internal)
+- `drakkar_rclone` (FUSE mount at `/mnt/drakkar/vfs`)
+- `drakkar_postgres` (internal)
+- `drakkar_valkey` (internal)
+- `drakkar_valkey_insight` (port 5540)
+- `drakkar_nzbhydra2` (port 5076)
+- `drakkar_apprise_api` (port 8000)
+- `drakkar_seerr` (port 5055)
 
-The companion apps are intentionally not all chained behind Drakkar health. Only true startup prerequisites use `depends_on`.
+Start:
 
-## Host mount setup
+```bash
+mkdir -p ./data
+docker compose up -d
+```
 
-Drakkar expects a shared host mount at `/mnt/drakkar`.
+Open `http://<server-ip>:8080`.
 
-Recommended systemd unit:
+## Host Mount Setup
+
+Drakkar mounts the FUSE VFS at `/mnt/drakkar/vfs` and stores media symlinks at `/mnt/drakkar/media`. The backend, rclone, and Plex must all see the same `/mnt/drakkar` tree.
+
+### Systemd unit
+
+Create `/etc/systemd/system/drakkar-mount.service`:
 
 ```ini
 [Unit]
-Description=Prepare Drakkar shared bind mount and Valkey host tuning
+Description=Prepare Drakkar shared bind mount
 After=local-fs.target
 Before=docker.service
 
@@ -40,7 +49,8 @@ Type=oneshot
 ExecStartPre=/usr/bin/mkdir -p /mnt/drakkar
 ExecStartPre=/usr/bin/mkdir -p /mnt/drakkar/media/movies
 ExecStartPre=/usr/bin/mkdir -p /mnt/drakkar/media/tv
-ExecStartPre=/usr/bin/mkdir -p /mnt/drakkar/fuse
+ExecStartPre=/usr/bin/mkdir -p /mnt/drakkar/vfs
+ExecStartPre=/usr/bin/mkdir -p /mnt/.drakkar-vfs-store
 ExecStartPre=/usr/bin/sh -c 'printf "%s\n" "vm.overcommit_memory = 1" > /etc/sysctl.d/99-valkey.conf'
 ExecStartPre=/usr/sbin/sysctl -p /etc/sysctl.d/99-valkey.conf
 ExecStart=/usr/bin/mount --bind /mnt/drakkar /mnt/drakkar
@@ -51,7 +61,7 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 ```
 
-Enable it:
+Enable:
 
 ```bash
 sudo systemctl daemon-reload
@@ -61,34 +71,44 @@ findmnt -T /mnt/drakkar -o TARGET,PROPAGATION
 
 Expected propagation: `shared` or `rshared`.
 
-## First boot
+### Plex container bind
+
+```yaml
+volumes:
+  - ./plex-data/config:/config
+  - /mnt/drakkar:/mnt/drakkar:rslave,z
+```
+
+Configure Plex libraries to:
+
+- Movies: `/mnt/drakkar/media/movies`
+- TV Shows: `/mnt/drakkar/media/tv`
+
+## First Boot
 
 Open the frontend and complete the setup wizard:
 
-- create the first admin
-- connect NZBHydra2
-- connect a Usenet provider
-- connect Seerr
-- connect metadata providers
-- optionally connect Plex
+1. Create the first admin account
+2. Connect NZBHydra2
+3. Connect a Usenet provider
+4. Connect Seerr
+5. Connect metadata providers (TMDB, TVDB)
+6. Connect Plex
 
-## Recommended request flow
+## Recommended Request Flow
 
 After setup:
 
-- configure the Seerr webhook to point at `http://YOUR_HOST:8080/api/webhooks/seerr`
-- keep periodic request sync enabled for broader reconciliation
+- configure the Seerr webhook: `http://YOUR_HOST:8080/api/webhooks/seerr`
+- keep periodic request sync enabled (runs every 10 minutes)
 
-This lets single requests arrive immediately while the scheduled sync handles larger backlog cleanup and recovery every 15 minutes by default.
+The webhook handles immediate single-request delivery; the scheduled sync handles reconciliation and recovery.
 
-## Companion service startup model
+## Companion Service Startup
 
-The public compose uses `depends_on` conservatively:
-
-- `backend` waits for `postgres` and `valkey`
-- `frontend` waits for `backend`
-- `valkey-insight` waits for `valkey`
-- `bazarr` waits for `backend`
-- `nzbhydra2` only waits for `apprise-api` startup
-
-`seerr` and `apprise-api` do not need to wait on Drakkar to boot.
+- `drakkar_backend` waits for `drakkar_postgres` and `drakkar_valkey`
+- `drakkar_rclone` waits for `drakkar_backend` (health check)
+- `drakkar_frontend` waits for `drakkar_backend`
+- `drakkar_valkey_insight` waits for `drakkar_valkey`
+- `drakkar_nzbhydra2` waits for `drakkar_apprise_api`
+- `drakkar_seerr` and `drakkar_apprise_api` start independently

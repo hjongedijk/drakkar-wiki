@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Runtime paths, settings.json, and where Drakkar stores real working data.
+description: Runtime paths, settings.json, rclone VFS settings, and where Drakkar stores data.
 ---
 
 # Configuration
@@ -11,76 +11,101 @@ Drakkar stores runtime config in:
 /data/config/settings.json
 ```
 
-## Runtime layout
+## Runtime Layout
 
-Persistent local data:
+Persistent config:
 
-- `/data/config/settings.json`
-- `/data/nzb-backup`
+- `/data/config/settings.json` — all integration credentials, API token, and settings
 
-Live working paths:
+FUSE and media paths (on the host, shared between containers):
 
-- `/mnt/downloads`
-- `/mnt/completed`
-- `/mnt/nzb`
-- `/mnt/media/movies`
-- `/mnt/media/tv`
+- `/mnt/drakkar/vfs` — rclone FUSE mount (WebDAV → NNTP streaming)
+- `/mnt/drakkar/media/movies` — Plex movie library (symlinks)
+- `/mnt/drakkar/media/tv` — Plex TV library (symlinks)
+- `/mnt/.drakkar-vfs-store` — internal VFS backing store (content, completed-symlinks, NZBs)
 
-FUSE views:
+### Symlink chain
 
-- `/mnt/fuse/nzb`
-- `/mnt/fuse/completed`
-- `/mnt/fuse/mounted/releases`
+Every media file is a 1-hop symlink from the Plex library into the FUSE mount:
 
-NZB backups are not exposed through the FUSE tree.
+```
+/mnt/drakkar/media/movies/Movie (Year)/Movie.mkv
+  → /.ids/c/m/p/s/y/<fileId>   (via FUSE)
+  → rclone WebDAV GET
+  → Drakkar backend
+  → NNTP stream
+```
 
-## Public compose services
+## rclone VFS Settings
 
-The published compose now includes:
+rclone mounts the backend WebDAV as a FUSE filesystem optimised for streaming:
 
-- `frontend`
-- `backend`
-- `postgres`
-- `valkey`
-- `valkey-insight`
-- `nzbhydra2`
-- `apprise-api`
-- `seerr`
-- `bazarr`
+| Flag | Value | Purpose |
+|---|---|---|
+| `--vfs-cache-mode` | `full` | Sparse disk cache — only downloaded bytes stored |
+| `--vfs-cache-max-size` | `20G` | Disk cache limit |
+| `--vfs-cache-max-age` | `24h` | Keep cached files 24 h |
+| `--buffer-size` | `128M` | RAM buffer (kept small with full mode) |
+| `--vfs-read-ahead` | `1024M` | 1 GB on-disk prefetch ahead of playback position |
+| `--vfs-read-chunk-size` | `8M` | 8 MB chunks → first bytes in ~0.6 s |
+| `--vfs-fast-fingerprint` | — | Size-only fingerprint, no hash |
+| `--no-modtime` | — | Skip modtime reads (files never change) |
+| `--no-checksum` | — | Skip checksum verification |
+| `--read-only` | — | FUSE is read-only; backend handles writes |
+| `--retries` | `0` | Fail fast; NNTP pool handles retries |
+| `--low-level-retries` | `0` | Same |
+| `--dir-cache-time` | `20s` | Directory cache TTL |
 
-They share one bridge network, but Drakkar still uses `settings.json` as the source of truth for integration URLs, API keys, and behavior.
+## Services
 
-## Shared API token
+The public compose includes:
 
-The Settings page exposes one shared **Drakkar API Token**.
+- `drakkar_frontend`, `drakkar_backend`, `drakkar_rclone`
+- `drakkar_postgres`, `drakkar_valkey`, `drakkar_valkey_insight`
+- `drakkar_nzbhydra2`, `drakkar_apprise_api`, `drakkar_seerr`
+
+All share one bridge network. Integration URLs, API keys, and behaviour are configured via `settings.json`.
+
+## Shared API Token
+
+The Settings page exposes one **Drakkar API Token**.
 
 Use it for:
 
 - frontend to backend requests
 - remote REST API calls
 - GraphQL requests
-- Bazarr Sonarr/Radarr-compatible requests
-
-Remote API example:
 
 ```bash
 curl -H 'x-api-token: YOUR_DRAKKAR_API_TOKEN' \
   http://HOST:8080/api/status
 ```
 
-Bearer auth with the same token also works, but it is not required.
+`Authorization: Bearer YOUR_DRAKKAR_API_TOKEN` also works.
 
-## Request sync cadence
+## Monitoring Tasks
 
-Drakkar now treats request intake as two separate paths:
+All tasks run unconditionally on schedule (no deferral for streaming or IO):
 
-- **Seerr webhook** for immediate single approved requests
-- **Periodic request sync** for broader reconciliation, duplicate cleanup, recovery, and queue seeding
+| Task | Default interval |
+|---|---|
+| `request-download-recovery` | 10 min |
+| `nzbhydra-rss-sync` | 15 min |
+| `background-repair` | 30 min |
+| `log-prune` | 6 h |
 
-Default periodic request sync interval:
+`monitorQueueSeedTarget` (default 20) controls how many missing items are queued per cycle.
 
-```txt
-15 minutes
-```
+## Request Sync Cadence
 
-That is intentionally slower than before so large libraries do not get hammered by full polling loops while the webhook already covers fast single-request delivery.
+Two paths handle request intake:
+
+- **Seerr webhook** — immediate delivery for single approved requests
+- **Periodic request sync** — broader reconciliation, duplicate cleanup, and recovery every 10 minutes
+
+## NZBHydra Categories
+
+Default categories:
+
+- Movies: `2030`, `2040`, `2045`, `2050`, `2060`
+- TV: `5030`, `5040`, `5045`, `5080`
